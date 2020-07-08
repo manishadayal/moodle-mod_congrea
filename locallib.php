@@ -1437,45 +1437,41 @@ function sectohour($seconds) {
  * @since Moodle 3.8
  * @throws moodle_exception
  */
-function get_congrea_token_for_loggedin_admin(){
-	global $DB, $USER, $CFG;
-
-	$systemcontext = context_system::instance();
-	if(has_capability('moodle/site:config', $systemcontext, $USER->id)){
-
-		if(!$service = $DB->get_record('external_services', array('name' => 'Congrea service', 'enabled' => 1))){
-			throw new dml_exception("MissingCongreawebservice", "external_services");
-		}
-		$conditions = array(
-        	'userid' => $USER->id,
-        	'externalserviceid' => $service->id
-    	);
-    	$tokens = $DB->get_records('external_tokens', $conditions, 'timecreated ASC');
-    	foreach ($tokens as $key => $token) {
-    		$unsettoken = false;
-    		        // Remove token is not valid anymore.
-			if (!empty($token->validuntil) and $token->validuntil < time()) {
-				$DB->delete_records('external_tokens', array('token' => $token->token, 'tokentype' => EXTERNAL_TOKEN_EMBEDDED));
-				$unsettoken = true;
-			}
-
-			// Remove token if its ip not in whitelist.
-			if (isset($token->iprestriction) and !address_in_subnet(getremoteaddr(), $token->iprestriction)) {
-				$unsettoken = true;
-			}
-
-			if ($unsettoken) {
-				unset($tokens[$key]);
-			}
-    	}
-    	if (count($tokens) > 0) {
-        	$token = array_pop($tokens);
-        	return $token;
-    	} else {
-    		throw new moodle_exception('cannotcreatetoken', 'webservice', '', $service->name);
-    	}
+function get_congrea_token_for_loggedin_admin() {
+    global $DB, $USER, $CFG;
+    $systemcontext = context_system::instance();
+    if (has_capability('moodle/site:config', $systemcontext, $USER->id)) {
+        if (!$service = $DB->get_record('external_services', array('name' => 'Congrea service', 'enabled' => 1))) {
+            throw new dml_exception("MissingCongreawebservice", "external_services");
+        }
+        $conditions = array(
+            'userid' => $USER->id,
+            'externalserviceid' => $service->id
+        );
+        $tokens = $DB->get_records('external_tokens', $conditions, 'timecreated ASC');
+        foreach ($tokens as $key => $token) {
+            $unsettoken = false;
+            // Remove token is not valid anymore.
+            if (!empty($token->validuntil) and $token->validuntil < time()) {
+                $DB->delete_records('external_tokens', array('token' => $token->token, 'tokentype' => EXTERNAL_TOKEN_EMBEDDED));
+                $unsettoken = true;
+            }
+            // Remove token if its ip not in whitelist.
+            if (isset($token->iprestriction) and !address_in_subnet(getremoteaddr(), $token->iprestriction)) {
+                $unsettoken = true;
+            }
+            if ($unsettoken) {
+                unset($tokens[$key]);
+            }
+        }
+        if (count($tokens) > 0) {
+            $token = array_pop($tokens);
+            return $token;
+        } else {
+            throw new moodle_exception('cannotcreatetoken', 'webservice', '', $service->name);
+        }
     } else {
-    	throw new moodle_exception('cannotcreatetoken', 'webservice', '', $service->name);
+        throw new moodle_exception('cannotcreatetoken', 'webservice', '', $service->name);
     }
 }
 

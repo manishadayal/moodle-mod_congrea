@@ -22,15 +22,11 @@
  */
 define('AJAX_SCRIPT', true);
 define('REQUIRE_CORRECT_ACCESS', true);
-//define('NO_MOODLE_COOKIES', false);
 
 require_once(dirname(dirname(dirname(__FILE__))) . '/config.php');
 require_once($CFG->libdir . '/externallib.php');
-//pass sesskey from calling function sesskey(); 
-//https://192.168.43.20/moodle38/mod/congrea/congreatoken.php?sesskey=MKGMdwxcjj&wsid=3
 
-//$serviceid = required_param('wsid', PARAM_INT);
-$sesskey = required_param('sesskey',PARAM_ALPHANUMEXT);
+$sesskey = required_param('sesskey', PARAM_ALPHANUMEXT);
 
 require_login();
 require_sesskey();
@@ -56,8 +52,10 @@ function congrea_generate_token_for_current_user($service) {
 
     // Specific checks related to user restricted service.
     if ($service->restrictedusers) {
-        $authoriseduser = $DB->get_record('external_services_users',
-            array('externalserviceid' => $service->id, 'userid' => $USER->id));
+        $authoriseduser = $DB->get_record(
+            'external_services_users',
+            array('externalserviceid' => $service->id, 'userid' => $USER->id)
+        );
 
         if (empty($authoriseduser)) {
             throw new moodle_exception('usernotallowed', 'webservice', '', $service->name);
@@ -115,11 +113,7 @@ function congrea_generate_token_for_current_user($service) {
         $token = array_pop($tokens);
     } else {
         $context = context_system::instance();
-        //$isofficialservice = $service->shortname == 'moodle_congrea';
-
-        /*if (($isofficialservice and has_capability('moodle/webservice:createmobiletoken', $context)) or
-                (!is_siteadmin($USER) && has_capability('moodle/webservice:createtoken', $context))) {*/
-        if ( !is_siteadmin($USER) && has_capability('moodle/webservice:createtoken', $context)) {
+        if (!is_siteadmin($USER) && has_capability('moodle/webservice:createtoken', $context)) {
 
             // Create a new token.
             $token = new stdClass;
@@ -131,7 +125,6 @@ function congrea_generate_token_for_current_user($service) {
             $token->timecreated = time();
             $token->externalserviceid = $service->id;
             // By default tokens are valid for 12 weeks.
-            //$token->validuntil = $token->timecreated + $CFG->tokenduration;
             $token->validuntil = 0;
             $token->iprestriction = null;
             $token->sid = session_id();
@@ -159,30 +152,25 @@ function congrea_generate_token_for_current_user($service) {
     return $token;
 }
 
-
-//echo $OUTPUT->header();
 if (!$CFG->enablewebservices) {
     throw new moodle_exception('enablewsdescription', 'webservice');
 }
-//$usercontext = context_user::instance($USER->id);
 
-//check if the service exists and is enabled
+// Check if the service exists and is enabled.
 $service = $DB->get_record('external_services', array('name' => 'Congrea service', 'enabled' => 1));
 if (empty($service)) {
-	// will throw exception if no token found
-	throw new moodle_exception('servicenotavailable', 'webservice');
+    // Will throw exception if no token found.
+    throw new moodle_exception('servicenotavailable', 'webservice');
 }
 if ($USER->id) {
     // Get an existing token or create a new one.
     $token = congrea_generate_token_for_current_user($service);
-    //$token = external_generate_token(EXTERNAL_TOKEN_EMBEDDED, $serviceid, $USER->id, $context);
-    //print_r($token );exit;
     $privatetoken = $token->privatetoken;
     external_log_token_request($token);
 
     $systemcontext = context_system::instance();
     $siteadmin = has_capability('moodle/site:config', $systemcontext, $USER->id);
- 	$usertoken = new stdClass;
+    $usertoken = new stdClass;
     $usertoken->token = $token->token;
     // Private token, only transmitted to https sites and non-admin users.
     if (is_https() and !$siteadmin) {
@@ -191,7 +179,6 @@ if ($USER->id) {
         $usertoken->privatetoken = null;
     }
     echo json_encode($usertoken);
-
-}else{
-	throw new moodle_exception('invalidlogin');
+} else {
+    throw new moodle_exception('invalidlogin');
 }
