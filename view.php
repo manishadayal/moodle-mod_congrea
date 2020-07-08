@@ -452,8 +452,23 @@ if (($sessionendtime > time() && $sessionstarttime <= time()) || (!empty($infini
     } else {
         $sendmurl = str_replace("http://", "https://", $CFG->wwwroot);
     }
-        $recordingstatus = false;
+    $recordingstatus = false;
+    //******** congrea web service token ********
+    $wstoken ='';
+    if ( !is_siteadmin($USER)) {
 
+		$js = "require(['jquery'], function($) {	
+			$.get('congreatoken.php?sesskey=".sesskey()."', function(data) {	
+				$('input[name=\"wstoken\"]').val(data.token);
+			});				
+		});";
+
+		$PAGE->requires->js_amd_inline($js);
+	} else {
+		$token = get_congrea_token_for_loggedin_admin();
+		$wstoken = $token->token;
+	}	
+    //******** congrea web service token ********
     $form = congrea_online_server(
         $url,
         $authusername,
