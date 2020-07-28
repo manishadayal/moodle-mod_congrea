@@ -369,3 +369,5 @@ $string['hours'] = ' hr ';
 $string['scheduleid'] = 'Schedule ID';
 $string['blankduration'] = 'Invalid input!';
 $string['totalconflicts'] = 'Total conflicts = ';
+$string['missingwstoken'] = 'Missing Web service token for Congrea';
+$string['Noserviceidforcongrea'] = 'Congrea web service does not exit'; 
