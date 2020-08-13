@@ -314,8 +314,8 @@ if ($congrea->intro) {
 }
 echo html_writer::empty_tag('br');
 // Serve online at vidya.io.
-$url = "https://live.congrea.net"; // Online url.
-//$url = "https://live.congrea.net/virtualclass/example/index1.php"; // local url
+$url = "http://live.congrea.net"; // Online url.
+//$url = "http://live.congrea.net/virtualclass/example/index.php"; // local url
 $info = false; // Debugging off.
 if ($USER->picture) {
     $userpicture = moodle_url::make_pluginfile_url(context_user::instance($USER->id)->id, 'user', 'icon', null, '/', 'f2');
@@ -457,20 +457,17 @@ if (($sessionendtime > time() && $sessionstarttime <= time()) || (!empty($infini
     // Congrea web service token.
     $wstoken ='';
     if (!is_siteadmin($USER)) {
-
         $js = "require(['jquery'], function($) {	
             $.get('congreatoken.php?sesskey=".sesskey()."', function(data) {	
                 $('input[name=\"wstoken\"]').val(data.token);
             });				
         });";
-
         $PAGE->requires->js_amd_inline($js);
     } else {
         $token = get_congrea_token_for_loggedin_admin();
         $wstoken = $token->token;
     }	
     // Congrea web service token.
-
     $form = congrea_online_server(
         $url,
         $authusername,

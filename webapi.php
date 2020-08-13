@@ -24,7 +24,7 @@
  */
 
 require_once(dirname(dirname(dirname(__FILE__))) . '/config.php');
-require('weblib.php');
+//require('weblib.php');
 
 // The function list is avaible in weblib.php.
 define('FUNCTIONS_LIST', serialize(array(

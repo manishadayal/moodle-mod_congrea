@@ -114,16 +114,15 @@ function congrea_online_server(
     $username = $USER->firstname . ' ' . $USER->lastname;
     $querystring = "sesskey=".sesskey()."&uid={$USER->id}&name={$username}&role={$role}&room={$room}
     &sid={$USER->sesskey}&user={$authusername}&pass={$authpassword}&rid={$rid}&upload={$upload}&down={$down}
-    &debug={$debug}&congreacolor=#{$cgcolor}&webapi={$webapi}&userpicture={$userpicturesrc}&fromcms={$fromcms}
+    &debug={1}&congreacolor=#{$cgcolor}&webapi={$webapi}&userpicture={$userpicturesrc}&fromcms={$fromcms}
     &licensekey={$licensekey}&audio={$audiostatus}&video={$videostatus}&recording={$recording}
-    &settings={$hexcode}&sstart={$sstart}&send={$send}&nextsessionstarttime={$nextsessionstarttime}&language=".current_language();
-print_r($querystring);
+    &settings={$hexcode}&sstart={$sstart}&send={$send}&nextsessionstarttime={$nextsessionstarttime}&wstoken={$wstoken}&language=".current_language();
+
     // Encrypt query string to base64.
     $querystring = b64link_encode($querystring);
-
     $form = html_writer::start_tag('form', array('id' => 'overrideform', 'target' => '_blank',
     'action' => $url, 'method' => 'get'));
-
+    $form .= html_writer::empty_tag('input', array('type' => 'hidden', 'name' => 'wstoken', 'value' => $wstoken));
     if (!$joinbutton) {
         if ($role == 't') {
             // Button to dynamically load URL -> needed for PWA.
@@ -1442,9 +1441,10 @@ function sectohour($seconds) {
 function get_congrea_token_for_loggedin_admin(){
 	global $DB, $USER, $CFG;
 
-	$systemcontext = context_system::instance();
+    $systemcontext = context_system::instance();
+    $service = $DB->get_record('external_services', array('name' => 'Congrea service', 'enabled' => 1));
 	if(has_capability('moodle/site:config', $systemcontext, $USER->id)){
-
+        
 		if(!$service = $DB->get_record('external_services', array('name' => 'Congrea service', 'enabled' => 1))){
 			throw new dml_exception("MissingCongreawebservice", "external_services");
 		}
