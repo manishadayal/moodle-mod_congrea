@@ -112,25 +112,28 @@ function congrea_online_server(
 
     global $USER;
     $username = $USER->firstname . ' ' . $USER->lastname;
-    $querystring = "sesskey=".sesskey()."&uid={$USER->id}&name={$username}&role={$role}&room={$room}
+    $querystring = "uid={$USER->id}&name={$username}&role={$role}&room={$room}
     &sid={$USER->sesskey}&user={$authusername}&pass={$authpassword}&rid={$rid}&upload={$upload}&down={$down}
-    &debug={1}&congreacolor=#{$cgcolor}&webapi={$webapi}&userpicture={$userpicturesrc}&fromcms={$fromcms}
+    &debug=1&congreacolor=#{$cgcolor}&webapi={$webapi}&userpicture={$userpicturesrc}&fromcms={$fromcms}
     &licensekey={$licensekey}&audio={$audiostatus}&video={$videostatus}&recording={$recording}
-    &settings={$hexcode}&sstart={$sstart}&send={$send}&nextsessionstarttime={$nextsessionstarttime}&wstoken={$wstoken}&language=".current_language();
-
-    // Encrypt query string to base64.
-    $querystring = b64link_encode($querystring);
+    &settings={$hexcode}&language=".current_language()."&wstoken=";
+    //$querystring = b64link_encode($querystring);
     $form = html_writer::start_tag('form', array('id' => 'overrideform', 'target' => '_blank',
     'action' => $url, 'method' => 'get'));
-    $form .= html_writer::empty_tag('input', array('type' => 'hidden', 'name' => 'wstoken', 'value' => $wstoken));
+    $form .= html_writer::empty_tag('input', array('type' => 'hidden', 'name' => 'wstoken', 'value' => $wstoken, 'data-to' => ($querystring.$wstoken), 'data-url' => $url));
+    // Encrypt query string to base64.
+    //$querystring = b64link_encode($querystring);
+    //print_r($querystring);
     if (!$joinbutton) {
         if ($role == 't') {
             // Button to dynamically load URL -> needed for PWA.
             $form .= html_writer::empty_tag('input', array(
+                'name' => 'joinform',
                 'id' => 'overrideform-btn',
                 'type' => 'button',
-                'data-to' => $url.'?'.$querystring,
+                'data-to' => '',
                 'data-expected' => 0,
+                //'data-wstoken' => $wstoken,
                 'class' => 'vcbutton',
                 'value' => get_string('joinasteacher', 'congrea')
             ));
@@ -139,8 +142,9 @@ function congrea_online_server(
             $form .= html_writer::empty_tag('input', array(
                 'id' => 'overrideform-btn',
                 'type' => 'button',
-                'data-to' => $url.'?'.$querystring,
+                'data-to' => '',
                 'data-expected' => 0,
+                //'data-wstoken' => $wstoken,
                 'class' => 'vcbutton',
                 'value' => get_string('joinasstudent', 'congrea')
             ));

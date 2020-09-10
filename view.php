@@ -314,7 +314,7 @@ if ($congrea->intro) {
 }
 echo html_writer::empty_tag('br');
 // Serve online at vidya.io.
-$url = "http://live.congrea.net"; // Online url.
+$url = "https://live.congrea.net"; // Online url.
 //$url = "http://live.congrea.net/virtualclass/example/index.php"; // local url
 $info = false; // Debugging off.
 if ($USER->picture) {
@@ -457,10 +457,16 @@ if (($sessionendtime > time() && $sessionstarttime <= time()) || (!empty($infini
     // Congrea web service token.
     $wstoken ='';
     if (!is_siteadmin($USER)) {
-        $js = "require(['jquery'], function($) {	
+        /* $js = "require(['jquery'], function($) {	
             $.get('congreatoken.php?sesskey=".sesskey()."', function(data) {	
                 $('input[name=\"wstoken\"]').val(data.token);
             });				
+        });"; */
+        $js = "require(['jquery'], function($) {
+            $.get('congreatoken.php?sesskey=".sesskey()."', function(data) {
+                url = $('input[name=\"wstoken\"]').attr('data-url');
+                $('input[id=\"overrideform-btn\"]').attr('data-to', (url + '?' + btoa($('input[name=\"wstoken\"]').attr('data-to') + data.token)));
+            });
         });";
         $PAGE->requires->js_amd_inline($js);
     } else {
