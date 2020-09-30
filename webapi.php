@@ -24,7 +24,8 @@
  */
 
 require_once(dirname(dirname(dirname(__FILE__))) . '/config.php');
-require('externallib.php');
+//require('externallib.php');
+require_once($CFG->dirroot . '/mod/congrea/externallib.php');
 
 // The function list is avaible in weblib.php.
 define('FUNCTIONS_LIST', serialize(array('mod_congrea_poll_save', 'mod_congrea_poll_data_retrieve',
@@ -82,58 +83,47 @@ function execute_action() {
 }
 
 
-//----------------web service call---------//
-
+// Web service call.
 $cmid = required_param('cmid', PARAM_INT);
 $userid = required_param('user', PARAM_INT);
 $token = required_param('token', PARAM_ALPHANUMEXT);
-//$token = '6d75d698a5dc0a754818105d1471faaa';
-///// XML-RPC CALL
+// XML-RPC CALL.
 header('Content-type: text/plain');
 
 require_once($CFG->libdir. "/filelib.php");
-/// FUNCTION NAME
+// FUNCTION NAME.
 $functionname = execute_action();
-$serverurl = $CFG->wwwroot . '/webservice/xmlrpc/server.php'. '?wstoken=' . $token . 'wsfunction=' . $functionname;
+$serverurl = $CFG->wwwroot . '/webservice/xmlrpc/server.php'. '?wstoken=' . $token;
 
-//require_once('curl.php');
 $curl = new curl;
-$curl->setHeader('Content-type: text/xml');
-// Options
+// Options.
 $options = array();
 $options['RETURNTRANSFER'] = true;
 $options['SSL_VERIFYHOST'] = 0;
 $options['SSL_VERIFYPEER'] = false;
-//$options['CURLOPT_ENCODING'] = 'iso-8859-1';
-$xmlformat = 'xml';
+$options['CURLOPT_ENCODING'] = 'UTF-8';
 
 exit_if_request_is_options();
 $postdata = received_post_data();
-
+//$functionname = 'mod_congrea_quiz_list';
 $params = array ();
-/// PARAMETERS
+// PARAMETERS.
 switch ($functionname) {
     case 'core_course_get_enrolled_users_by_cmid':
-        //https://live.congrea.net/m35/mod/congrea/webapi.php?cmid=2&user=22&methodname=core_course_get_enrolled_users_by_cmid
-		//$params = (int)$cmid;
-        //$post = xmlrpc_encode_request($functionname, array($params), array('escaping' => 'markup'));
-        
-        $request = xmlrpc_encode_request($functionname, array(array((int) $cmid)), array('encoding'=>'UTF-8'));
-        $resp = xmlrpc_decode($curl->post($serverurl.$xmlformat, urlencode($request), $options));
-        //print_r($resp);
-        echo json_encode($resp['users']); // Undefined index: users in D:\webroot\m35\mod\congrea\webapi.php on line 117
+		$params = (int)$cmid;
+        $post = xmlrpc_encode_request($functionname, $params, array('encoding'=>'UTF-8'));
+        $resp = xmlrpc_decode($curl->post($serverurl, $post, $options));
+        echo json_encode($resp['users']);
         break;          
 	case 'mod_congrea_quiz_list':  
         $cmid = (int) $cmid;
-        $user = (int) $postdata['user'];
-        
-		//$params = array($cmid,$user);
-		$post = xmlrpc_encode_request($functionname, array(array((int) $cmid), array((int) $postdata['user'])), array('escaping' => 'markup'));
-		$resp = xmlrpc_decode($curl->post($serverurl.$xmlformat, $post, $options));
+		$params = array($cmid);
+		$post = xmlrpc_encode_request($functionname, $params, array('encoding' => 'UTF-8'));
+		$resp = xmlrpc_decode($curl->post($serverurl, $post, $options));
 
 		if(!empty($resp['quizdata'])) {
 			$quizdataarray = $resp['quizdata'];
-			//changing formate of quiz data for congrea
+			// Changing formate of quiz data for congrea.
 			$quizdata = array();
 			foreach ($quizdataarray as $key => $data) {
 				$quizdata[$data['id']] = $data;
@@ -147,10 +137,10 @@ switch ($functionname) {
 	case 'mod_congrea_add_quiz':   
 		$cmid = (int) $cmid;
 		$qzid = (int) $postdata['qzid'];
-		//$params = array($cmid, $qzid);
-		$post = xmlrpc_encode_request($functionname, array(array((int) $cmid), array((int) $postdata['qzid']), array('escaping' => 'markup')));
-		$resp = xmlrpc_decode($curl->post($serverurl.$xmlformat, $post, $options));			
-		// Encoded to retain boolean value in js
+		$params = array($cmid, $qzid);
+		$post = xmlrpc_encode_request($functionname, $params, array('escaping' => 'markup'));
+		$resp = xmlrpc_decode($curl->post($serverurl, $post, $options));			
+		// Encoded to retain boolean value in js.
 		echo json_encode($resp['status']);
 		break;           
 	case 'mod_congrea_quiz_result': 
@@ -162,50 +152,40 @@ switch ($functionname) {
 		$result['timetaken'] = $postdata['timetaken'];
 		$result['questionattempted'] = $postdata['qusattempted'];
 		$result['correctanswer'] = $postdata['currectans'];
-
-		//$params = array($result);
-		$post = xmlrpc_encode_request($functionname, array(array((int) $result)), array('escaping' => 'markup'));
-		$resp = xmlrpc_decode($curl->post($serverurl.$xmlformat, $post, $options));
-		// Encoded to retain boolean value in js
+        $params = array($result);
+		$post = xmlrpc_encode_request($functionname, $params, array('escaping' => 'markup'));
+		$resp = xmlrpc_decode($curl->post($serverurl, $post, $options));
+		// Encoded to retain boolean value in js.
 		echo json_encode($resp['status']);
 		break;          
 	case 'mod_congrea_get_quizdata':
-		//TODO: change datatype to int, string comming
+        // TODO: change datatype to int, string comming 'qid' is undefined.
 		$data = array('cmid' => (int) $postdata['cmid'], 'user' => (int) $postdata['user'], 'qid' => (int) $postdata['qid']);
 		$params = array($data);
 		$post = xmlrpc_encode_request($functionname, $params, array('escaping' => 'markup'));
-		$resp = xmlrpc_decode($curl->post($serverurl.$xmlformat, $post, $options));
+		$resp = xmlrpc_decode($curl->post($serverurl, $post, $options));
 		echo (json_encode($resp));
 		break;        	
 	case 'mod_congrea_poll_data_retrieve' :        
-		//$category = (int) $postdata['category'];
-		//$user = (int) $postdata['user'];
-        //$methodname = 'mod_congrea_poll_data_retrieve';
-        //$post = 'https://live.congrea.net/m35/webservice/rest/server.php?wstoken=7c6b2cba5c27e8eabbb8cd8c69c8e5c0&wsfunction=mod_congrea_poll_data_retrieve&category=7&userid=22&moodlewsrestformat=json';
-
-
-        //$methodname = 'poll_data_retrieve';
-		////$params = array($category, $user);
-        $post = xmlrpc_encode_request($functionname, array(array((int) $postdata['category']), array((int) $postdata['user'])), array('escaping' => 'markup'));
-        $curl_resp = $curl->post($serverurl.$xmlformat, urlencode($post), $options);
-		$resp = xmlrpc_decode($curl_resp);
-		//TODO: nopoll return redefine
+		$category = (int) $postdata['category'];
+		$user = (int) $postdata['user'];
+		$params = array($category, $user);
+        $post = xmlrpc_encode_request($functionname, $params, array('encoding' => 'UTF-8'));
+		$resp = xmlrpc_decode($curl->post($serverurl, $post, $options));
+		// TODO: nopoll return redefine.
 		if (array_key_exists('faultString', $resp)) {
-			echo json_encode(array('true'));
+			echo json_encode(array("true"));
 		} else {
 			$resp['responsearray'][] = $resp['admin'];
-            echo json_encode($resp['responsearray']);
-        }
+			echo json_encode($resp['responsearray']);
+		}
 		break;
 	case 'mod_congrea_poll_save':        
         $cmid = (int) $cmid;
         $data = array('dataToSave'=> $postdata['dataToSave'], 'user' => $postdata['user']);
-        //$data = array('dataToSave'=> json_decode($postdata['dataToSave']));
-        //$params = array('dataToSave'=> json_decode($postdata['dataToSave']), 'user' => (int)$userid, 'token' => $postdata['token'], 'cmid' => $cmid);
-		//$params = array($cmid, $data);
-        $post = xmlrpc_encode_request($functionname, array(array((int) $cmid), array($data)), array('escaping' => 'markup'));
-        $curl_resp = $curl->post($serverurl.$xmlformat, $post, $options);
-		$resp = xmlrpc_decode($curl_resp);
+		$params = array($cmid, $data);
+		$post = xmlrpc_encode_request($functionname, $params, array('escaping' => 'markup','encoding' => 'UTF-8'));
+        $resp = xmlrpc_decode($curl->post($serverurl, $post, $options));
 		$return  = (!empty($resp['pollobject'])) ? json_encode($resp['pollobject']): get_string('nopollsave', 'congrea');
 		echo $return;
 		break;           
@@ -214,26 +194,26 @@ switch ($functionname) {
 		$user = (int) $postdata['user'];
 		$params = array($qid, $user);
 		$post = xmlrpc_encode_request($functionname, $params, array('escaping' => 'markup'));
-		$resp = xmlrpc_decode($curl->post($serverurl.$xmlformat, $post, $options));
+		$resp = xmlrpc_decode($curl->post($serverurl, $post, $options));
 		echo $resp['category'];
 		break;
 	case 'mod_congrea_poll_option_drop':
-		//TODO: Not working- Fix option id 
+		// TODO: Not working- Fix option id.
 		$cmid = (int) $cmid;      
 		$polloptionid = (int) $postdata['id'];
 		$params = array($cmid, $polloptionid);
 		$post = xmlrpc_encode_request($functionname, $params, array('escaping' => 'markup'));
-		$resp = xmlrpc_decode($curl->post($serverurl.$xmlformat, $post, $options));
+		$resp = xmlrpc_decode($curl->post($serverurl, $post, $options));
 		$return = $resp['status'] ? json_encode($resp['status']) : get_string('deletepolloption', 'congrea');
 		echo $return;
 		break;
 	case 'mod_congrea_poll_update':
-		//TODO: NOT WORKING- option missing       
+		// TODO: NOT WORKING- option missing.     
 		$cmid = (int) $cmid;
 		$data = array('dataToUpdate'=> $postdata['editdata'], 'user' => $postdata['user']);
 		$params = array($cmid, $data);
 		$post = xmlrpc_encode_request($functionname, $params, array('escaping' => 'markup'));
-		$resp = xmlrpc_decode($curl->post($serverurl.$xmlformat, $post, $options));
+		$resp = xmlrpc_decode($curl->post($serverurl, $post, $options));
 		$return  = (!empty($resp['pollobject'])) ? json_encode($resp['pollobject']): get_string('nopollsave', 'congrea');
 		echo $return;
 		break;
@@ -242,7 +222,7 @@ switch ($functionname) {
 		$data = array('resultdata'=> $postdata['saveResult'], 'user' => $postdata['user']);
 		$params = array($cmid, $data);
 		$post = xmlrpc_encode_request($functionname, $params, array('escaping' => 'markup'));
-		$resp = xmlrpc_decode($curl->post($serverurl.$xmlformat, $post, $options));
+		$resp = xmlrpc_decode($curl->post($serverurl, $post, $options));
 		echo $resp['category'];
 		break;
     }

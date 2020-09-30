@@ -239,7 +239,6 @@ if (!empty($cgapi = get_config('mod_congrea', 'cgapi')) && !empty($cgsecret = ge
     if (strlen($cgsecret) >= 64 && strlen($cgapi) > 32) {
         if (!empty($uuid)) {
             $authdata = get_auth_data($cgapi, $cgsecret, $recordingstatus, $course, $cm, $role, $uuid); // Call to authdata.
-            $uuid = $uuid;
         } else {
             $authdata = get_auth_data($cgapi, $cgsecret, $recordingstatus, $course, $cm, $role); // Call to authdata.
             $uuid = '';
@@ -315,7 +314,6 @@ if ($congrea->intro) {
 echo html_writer::empty_tag('br');
 // Serve online at vidya.io.
 $url = "https://live.congrea.net"; // Online url.
-//$url = "http://live.congrea.net/virtualclass/example/index.php"; // local url
 $info = false; // Debugging off.
 if ($USER->picture) {
     $userpicture = moodle_url::make_pluginfile_url(context_user::instance($USER->id)->id, 'user', 'icon', null, '/', 'f2');
@@ -440,7 +438,7 @@ $variableobject = (object) array(
     'qacomment' => $qacomment,
     'qaupvote' => $qaupvote, 'x6' => 0
 );
-$hexcode = settingstohex($variableobject); // Todo- for validation.
+$hexcode = settingstohex($variableobject); // TODO: for validation.
 if ($psession) {
     $joinbutton = true;
 } else {
@@ -457,11 +455,6 @@ if (($sessionendtime > time() && $sessionstarttime <= time()) || (!empty($infini
     // Congrea web service token.
     $wstoken ='';
     if (!is_siteadmin($USER)) {
-        /* $js = "require(['jquery'], function($) {	
-            $.get('congreatoken.php?sesskey=".sesskey()."', function(data) {	
-                $('input[name=\"wstoken\"]').val(data.token);
-            });				
-        });"; */
         $js = "require(['jquery'], function($) {
             $.get('congreatoken.php?sesskey=".sesskey()."', function(data) {
                 url = $('input[name=\"wstoken\"]').attr('data-url');
