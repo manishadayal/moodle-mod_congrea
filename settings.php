@@ -121,16 +121,6 @@ if ($ADMIN->fulltree) {
     // Congrea Voting default on.
     $settings->add(new admin_setting_configcheckbox('mod_congrea/qaUpvote', get_string('qaUpvote', 'mod_congrea'),
                                                       get_string('qaUpvote_help', 'mod_congrea'), 1));
-    // Prepare Class time prior class.
-    $settings->add(new admin_setting_heading('mod_congrea/prep_header',
-    get_string('prep_header', 'congrea'), ''));
-    $preptime = get_config('mod_congrea', 'preptime');
-    if (empty($preptime)) {
-        $preptime = 30;
-        set_config('preptime', $preptime, 'mod_congrea');
-    }
-    $settings->add(new admin_setting_configtext('mod_congrea/preptime',
-    get_string('prep', 'congrea'), '', $preptime . get_string('mins', 'congrea')));
     // Recordings Section.
     $settings->add(new admin_setting_heading('mod_congrea/recording_header', get_string('recordingsection', 'congrea'), ''));
     // Congrea recording default off.
