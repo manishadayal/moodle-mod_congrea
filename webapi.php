@@ -93,8 +93,9 @@ header('Content-type: text/plain');
 require_once($CFG->libdir. "/filelib.php");
 // FUNCTION NAME.
 $functionname = execute_action();
-$serverurl = $CFG->wwwroot . '/webservice/xmlrpc/server.php'. '?wstoken=' . $token;
-
+// Consume the web servcies via new congrea server.
+//$serverurl = $CFG->wwwroot . '/webservice/xmlrpc/server.php'. '?wstoken=' . $token;
+$serverurl = new moodle_url('/mod/congrea/server.php',['wstoken' => $token]);
 $curl = new curl;
 // Options.
 $options = array();
