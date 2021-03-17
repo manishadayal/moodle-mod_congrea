@@ -18,11 +18,11 @@
  * Congrea external functions and service definitions.
  *
  * @package     mod_congrea
- * @copyright   2020 vidyamantra.com
+ * @copyright   2021 vidyamantra.com
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @since       Moodle 3.8
  */
-
+defined('MOODLE_INTERNAL') || die();
 // We defined the web service functions to install.
 $functions = array(
     'mod_congrea_quiz_list' => array(

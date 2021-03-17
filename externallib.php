@@ -18,13 +18,19 @@
  * Congrea module external functions
  *
  * @package    mod_congrea
- * @copyright  2020 vidyamantra.com
+ * @copyright  2021 vidyamantra.com
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @since      Moodle 3.8
  */
+defined('MOODLE_INTERNAL') || die();
 require_once($CFG->libdir . "/externallib.php");
 require_once($CFG->dirroot . '/mod/congrea/locallib.php');
 
+/**
+ * Returns description of method parameters
+ * @return external_function_parameters
+ * @since Moodle 3.0
+ */
 class mod_congrea_external extends external_api
 {
 
@@ -250,8 +256,7 @@ class mod_congrea_external extends external_api
     /**
      * Save congrea quiz result.
      *
-     * @param int $cmid the course module id
-     * @param int $qzid the quiz id
+     * @param array $quizresult the quiz id
      * @return array of warnings and status result
      * @since Moodle 3.8
      * @throws moodle_exception
@@ -339,7 +344,6 @@ class mod_congrea_external extends external_api
     /**
      * Get the quizjson object from given quiz instance
      *
-     * @param int $cmid the course module id
      * @param array $data
      * @return array of warnings and status result
      * @since Moodle 3.8
@@ -778,7 +782,7 @@ class mod_congrea_external extends external_api
     /**
      * Delete poll question
      *
-     * @param int $categoryid category id for course/site poll
+     * @param int $qid quiz id for course/site poll
      * @param int $userid user id
      * @return array question information and warnings
      * @since Moodle 3.8
@@ -866,9 +870,9 @@ class mod_congrea_external extends external_api
     /**
      * Delete poll question
      *
-     * @param int $categoryid category id for course/site poll
-     * @param int $userid user id
-     * @return array question information and warnings
+     * @param int $cmid course module id
+     * @param int $polloptionid Poll option id
+     * @return array poll information and warnings
      * @since Moodle 3.8
      */
     public static function poll_option_drop($cmid, $polloptionid) {

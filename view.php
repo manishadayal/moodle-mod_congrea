@@ -453,19 +453,20 @@ if (($sessionendtime > time() && $sessionstarttime <= time()) || (!empty($infini
     }
     $recordingstatus = false;
     // Congrea web service token.
-    $wstoken ='';
+    $wstoken = '';
     if (!is_siteadmin($USER)) {
         $js = "require(['jquery'], function($) {
             $.get('congreatoken.php?sesskey=".sesskey()."', function(data) {
                 url = $('input[name=\"wstoken\"]').attr('data-url');
-                $('input[id=\"overrideform-btn\"]').attr('data-to', (url + '?' + btoa($('input[name=\"wstoken\"]').attr('data-to') + data.token)));
+                $('input[id=\"overrideform-btn\"]').attr('data-to', (url + '?' + btoa($('input[name=\"wstoken\"]').attr('data-to')
+                + data.token)));
             });
         });";
         $PAGE->requires->js_amd_inline($js);
     } else {
         $token = get_congrea_token_for_loggedin_admin();
         $wstoken = $token->token;
-    }	
+    }
     // Congrea web service token.
     $form = congrea_online_server(
         $url,

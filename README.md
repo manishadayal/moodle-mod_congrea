@@ -37,6 +37,10 @@ Feel free to send bug reports (and/or patches!)
 
 support@vidyamantra.com
 
+## 3.8+r9
+* Refactor communication code for Quiz and Poll
+* Security fixes. 
+
 ## 3.5+r8
 * Joining issue for non-English locales
 

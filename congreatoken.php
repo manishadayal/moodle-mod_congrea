@@ -16,8 +16,8 @@
 
 /**
  * Return token
- * @package    moodlemod congrea
- * @copyright  2020 vidyamantra.com
+ * @package    mod_congrea
+ * @copyright  2021 vidyamantra.com
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 define('AJAX_SCRIPT', true);

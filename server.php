@@ -18,8 +18,8 @@
 /**
  * XML-RPC web service entry point. The authentication is done via session tokens.
  *
- * @package    congrea xmlrpc server
- * @copyright  2021 Sumit Negi
+ * @package    mod_congrea
+ * @copyright  2021 vidyamantra.com
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -29,7 +29,7 @@
 define('NO_DEBUG_DISPLAY', true);
 
 define('WS_SERVER', true);
-
+// @codingStandardsIgnoreLine
 require('../../config.php');
 require_once("$CFG->dirroot/webservice/xmlrpc/locallib.php");
 

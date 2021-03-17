@@ -21,7 +21,7 @@
  * logic, should go here. Never include this file from your lib.php!
  *
  * @package    mod_congrea
- * @copyright  2020 vidyamantra.com
+ * @copyright  2021 vidyamantra.com
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 defined('MOODLE_INTERNAL') || die();
@@ -117,13 +117,10 @@ function congrea_online_server(
     &debug=1&congreacolor=#{$cgcolor}&webapi={$webapi}&userpicture={$userpicturesrc}&fromcms={$fromcms}
     &licensekey={$licensekey}&audio={$audiostatus}&video={$videostatus}&recording={$recording}
     &settings={$hexcode}&language=".current_language()."&wstoken=";
-    //$querystring = b64link_encode($querystring);
     $form = html_writer::start_tag('form', array('id' => 'overrideform', 'target' => '_blank',
     'action' => $url, 'method' => 'get'));
-    $form .= html_writer::empty_tag('input', array('type' => 'hidden', 'name' => 'wstoken', 'value' => $wstoken, 'data-to' => ($querystring.$wstoken), 'data-url' => $url));
-    // Encrypt query string to base64.
-    //$querystring = b64link_encode($querystring);
-    //print_r($querystring);
+    $form .= html_writer::empty_tag('input', array('type' => 'hidden', 'name' => 'wstoken', 'value' => $wstoken,
+    'data-to' => ($querystring.$wstoken), 'data-url' => $url));
     if (!$joinbutton) {
         if ($role == 't') {
             // Button to dynamically load URL -> needed for PWA.
@@ -133,7 +130,6 @@ function congrea_online_server(
                 'type' => 'button',
                 'data-to' => '',
                 'data-expected' => 0,
-                //'data-wstoken' => $wstoken,
                 'class' => 'vcbutton',
                 'value' => get_string('joinasteacher', 'congrea')
             ));
@@ -144,7 +140,6 @@ function congrea_online_server(
                 'type' => 'button',
                 'data-to' => '',
                 'data-expected' => 0,
-                //'data-wstoken' => $wstoken,
                 'class' => 'vcbutton',
                 'value' => get_string('joinasstudent', 'congrea')
             ));
@@ -1437,51 +1432,46 @@ function sectohour($seconds) {
  * Return an existing token for the current admin user.
  * This function is get a valid token already created for admin for congrea
  *
- * @param null
  * @return stdClass token object
  * @since Moodle 3.8
  * @throws moodle_exception
  */
-function get_congrea_token_for_loggedin_admin(){
-	global $DB, $USER, $CFG;
-
+function get_congrea_token_for_loggedin_admin() {
+    global $DB, $USER, $CFG;
     $systemcontext = context_system::instance();
     $service = $DB->get_record('external_services', array('name' => 'Congrea service', 'enabled' => 1));
-	if(has_capability('moodle/site:config', $systemcontext, $USER->id)){
-        
-		if(!$service = $DB->get_record('external_services', array('name' => 'Congrea service', 'enabled' => 1))){
-			throw new dml_exception("MissingCongreawebservice", "external_services");
-		}
-		$conditions = array(
-        	'userid' => $USER->id,
-        	'externalserviceid' => $service->id
-    	);
-    	$tokens = $DB->get_records('external_tokens', $conditions, 'timecreated ASC');
-    	foreach ($tokens as $key => $token) {
-    		$unsettoken = false;
-    		        // Remove token is not valid anymore.
-			if (!empty($token->validuntil) and $token->validuntil < time()) {
-				$DB->delete_records('external_tokens', array('token' => $token->token, 'tokentype' => EXTERNAL_TOKEN_EMBEDDED));
-				$unsettoken = true;
-			}
-
-			// Remove token if its ip not in whitelist.
-			if (isset($token->iprestriction) and !address_in_subnet(getremoteaddr(), $token->iprestriction)) {
-				$unsettoken = true;
-			}
-
-			if ($unsettoken) {
-				unset($tokens[$key]);
-			}
-    	}
-    	if (count($tokens) > 0) {
-        	$token = array_pop($tokens);
-        	return $token;
-    	} else {
-    		throw new moodle_exception('cannotcreatetoken', 'webservice', '', $service->name);
-    	}
-    }else{
-    	throw new moodle_exception('cannotcreatetoken', 'webservice', '', $service->name);
+    if (has_capability('moodle/site:config', $systemcontext, $USER->id)) {
+        if (!$service = $DB->get_record('external_services', array('name' => 'Congrea service', 'enabled' => 1))) {
+            throw new dml_exception("MissingCongreawebservice", "external_services");
+        }
+        $conditions = array(
+            'userid' => $USER->id,
+            'externalserviceid' => $service->id
+        );
+        $tokens = $DB->get_records('external_tokens', $conditions, 'timecreated ASC');
+        foreach ($tokens as $key => $token) {
+            $unsettoken = false;
+            // Remove token is not valid anymore.
+            if (!empty($token->validuntil) and $token->validuntil < time()) {
+                $DB->delete_records('external_tokens', array('token' => $token->token, 'tokentype' => EXTERNAL_TOKEN_EMBEDDED));
+                $unsettoken = true;
+            }
+            // Remove token if its ip not in whitelist.
+            if (isset($token->iprestriction) and !address_in_subnet(getremoteaddr(), $token->iprestriction)) {
+                $unsettoken = true;
+            }
+            if ($unsettoken) {
+                unset($tokens[$key]);
+            }
+        }
+        if (count($tokens) > 0) {
+            $token = array_pop($tokens);
+            return $token;
+        } else {
+            throw new moodle_exception('cannotcreatetoken', 'webservice', '', $service->name);
+        }
+    } else {
+        throw new moodle_exception('cannotcreatetoken', 'webservice', '', $service->name);
     }
 }
 

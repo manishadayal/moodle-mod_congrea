@@ -115,7 +115,7 @@ $capabilities = array(
             'manager' => CAP_ALLOW
         )
     ),
-    //Ability to attach, publish
+    // Ability to attach, publish.
     'mod/congrea:managequiz' => array(
         'riskbitmask' => RISK_SPAM,
         'captype' => 'write',
@@ -126,7 +126,7 @@ $capabilities = array(
             'manager' => CAP_ALLOW
         )
     ),
-    //Ability to manage poll data
+    // Ability to manage poll data.
     'mod/congrea:managepoll' => array(
         'riskbitmask' => RISK_SPAM,
         'captype' => 'write',
