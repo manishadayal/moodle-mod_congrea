@@ -84,9 +84,9 @@ class restore_congrea_activity_task extends restore_activity_task {
     }
     /**
      * Define the restore log rules that will be applied
-     * by the restore_logs_processor when restoring
+     * by the {restore_logs_processor} when restoring
      * course logs. It must return one array
-     * of objects
+     * of {restore_log_rule} objects
      *
      * Note this rules are applied when restoring course logs
      * by the restore final task, but are defined here at

@@ -21,7 +21,7 @@
  * logic, should go here. Never include this file from your lib.php!
  *
  * @package    mod_congrea
- * @copyright  2020 vidyamantra.com
+ * @copyright  2021 vidyamantra.com
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 defined('MOODLE_INTERNAL') || die();
@@ -76,6 +76,7 @@ function congrea_course_teacher_list($cmid) {
  * @param integer $sessionstarttime
  * @param integer $sessionendtime
  * @param integer $nextsessionstarttime
+ * @param string $wstoken
  * @return string
  */
 function congrea_online_server(
@@ -100,7 +101,8 @@ function congrea_online_server(
     $joinbutton = false,
     $sessionstarttime,
     $sessionendtime,
-    $nextsessionstarttime
+    $nextsessionstarttime,
+    $wstoken
 ) {
     // Boolean converter into integer.
     $debug = (int)$debug;
@@ -111,24 +113,23 @@ function congrea_online_server(
     $username = $USER->firstname . ' ' . $USER->lastname;
     $querystring = "uid={$USER->id}&name={$username}&role={$role}&room={$room}
     &sid={$USER->sesskey}&user={$authusername}&pass={$authpassword}&rid={$rid}&upload={$upload}&down={$down}
-    &debug={$debug}&congreacolor=#{$cgcolor}&webapi={$webapi}&userpicture={$userpicturesrc}&fromcms={$fromcms}
+    &debug=1&congreacolor=#{$cgcolor}&webapi={$webapi}&userpicture={$userpicturesrc}&fromcms={$fromcms}
     &licensekey={$licensekey}&audio={$audiostatus}&video={$videostatus}&recording={$recording}
     &settings={$hexcode}&sessionstarttime={$sessionstarttime}&sessionendtime={$sessionendtime}
-    &nextsessionstarttime={$nextsessionstarttime}&language=".current_language();
-
-    // Encrypt query string to base64.
-    $querystring = b64link_encode($querystring);
+    &nextsessionstarttime={$nextsessionstarttime}&language=".current_language()."&wstoken=";
 
     $form = html_writer::start_tag('form', array('id' => 'overrideform', 'target' => '_blank',
     'action' => $url, 'method' => 'get'));
-
+    $form .= html_writer::empty_tag('input', array('type' => 'hidden', 'name' => 'wstoken', 'value' => $wstoken,
+    'data-to' => ($querystring.$wstoken), 'data-url' => $url));
     if (!$joinbutton) {
         if ($role == 't') {
             // Button to dynamically load URL -> needed for PWA.
             $form .= html_writer::empty_tag('input', array(
+                'name' => 'joinform',
                 'id' => 'overrideform-btn',
                 'type' => 'button',
-                'data-to' => $url.'?'.$querystring,
+                'data-to' => '',
                 'data-expected' => 0,
                 'class' => 'vcbutton',
                 'value' => get_string('joinasteacher', 'congrea')
@@ -138,7 +139,7 @@ function congrea_online_server(
             $form .= html_writer::empty_tag('input', array(
                 'id' => 'overrideform-btn',
                 'type' => 'button',
-                'data-to' => $url.'?'.$querystring,
+                'data-to' => '',
                 'data-expected' => 0,
                 'class' => 'vcbutton',
                 'value' => get_string('joinasstudent', 'congrea')
@@ -1424,4 +1425,197 @@ function sectohour($seconds) {
         $timeformat = $hours . get_string('hours', 'congrea');
     }
     return $timeformat;
+}
+
+/**
+ * Return an existing token for the current admin user.
+ * This function is get a valid token already created for admin for congrea
+ *
+ * @return stdClass token object
+ * @since Moodle 3.8
+ * @throws moodle_exception
+ */
+function get_congrea_token_for_loggedin_admin() {
+    global $DB, $USER, $CFG;
+    $systemcontext = context_system::instance();
+    $service = $DB->get_record('external_services', array('name' => 'Congrea service', 'enabled' => 1));
+    if (has_capability('moodle/site:config', $systemcontext, $USER->id)) {
+        if (!$service = $DB->get_record('external_services', array('name' => 'Congrea service', 'enabled' => 1))) {
+            throw new dml_exception("MissingCongreawebservice", "external_services");
+        }
+        $conditions = array(
+            'userid' => $USER->id,
+            'externalserviceid' => $service->id
+        );
+        $tokens = $DB->get_records('external_tokens', $conditions, 'timecreated ASC');
+        foreach ($tokens as $key => $token) {
+            $unsettoken = false;
+            // Remove token is not valid anymore.
+            if (!empty($token->validuntil) and $token->validuntil < time()) {
+                $DB->delete_records('external_tokens', array('token' => $token->token, 'tokentype' => EXTERNAL_TOKEN_EMBEDDED));
+                $unsettoken = true;
+            }
+            // Remove token if its ip not in whitelist.
+            if (isset($token->iprestriction) and !address_in_subnet(getremoteaddr(), $token->iprestriction)) {
+                $unsettoken = true;
+            }
+            if ($unsettoken) {
+                unset($tokens[$key]);
+            }
+        }
+        if (count($tokens) > 0) {
+            $token = array_pop($tokens);
+            return $token;
+        } else {
+            throw new moodle_exception('cannotcreatetoken', 'webservice', '', $service->name);
+        }
+    } else {
+        throw new moodle_exception('cannotcreatetoken', 'webservice', '', $service->name);
+    }
+}
+
+/**
+ * function to get quiz question type
+ * serving for virtual class
+ *
+ * @param array $quizid
+ * @param string $type
+ * @return boolean
+ */
+function congrea_question_type($quizid, $type = 'multichoice') {
+    global $DB;
+    $sql = "SELECT qs.questionid, q.qtype
+                FROM {quiz_slots} qs
+                INNER JOIN
+                    {question} q
+                ON qs.questionid = q.id where quizid = '" . $quizid . "'";
+    $questions = $DB->get_records_sql($sql);
+    if (!empty($questions)) {
+        foreach ($questions as $questiondata) {
+            if ($questiondata->qtype == $type) { // Only support multichoice type question.
+                return true;
+            }
+        }
+        return false;
+    }
+}
+
+/**
+ * function to get file path
+ * serving for virtual class
+ *
+ * @param string $args
+ * @param bool $forcedownload
+ * @param array $options
+ * @return bool false if file not found, does not return if found - justsend the file
+ */
+function congrea_file_path($args, $forcedownload, $options) {
+    global $DB;
+    $options = array('preview' => $options);
+    $fs = get_file_storage();
+    $relativepath = explode('/', $args);
+    $hashpath = $DB->get_field('files', 'pathnamehash', array(
+        "contextid" => $relativepath[1],
+        'component' => $relativepath[2],
+        'filearea' => $relativepath[3],
+        'itemid' => $relativepath[4],
+        'filename' => $relativepath[5]
+    ));
+
+    if (!$file = $fs->get_file_by_hash($hashpath) or $file->is_directory()) {
+        send_file_not_found();
+    }
+    send_stored_file($file, 0, 0, $forcedownload, $options);
+}
+
+/**
+ * Convert encoded URLs in $text from the @@PLUGINFILE@@/... form to an actual URL.
+ * serving for virtual class
+ *
+ * @param string $text The content that may contain ULRs in need of rewriting.
+ * @param string $file The script that should be used to serve these files. pluginfile.php, draftfile.php, etc.
+ * @param int $contextid This parameter and the next two identify the file area to use.
+ * @param string $component
+ * @param string $filearea helps identify the file area.
+ * @param int $itemid helps identify the file area.
+ * @param string $filename helps identify the filename
+ * @param array $options text and file options ('forcehttps'=>false), use reverse = true to reverse the behaviour of the function.
+ * @return string the processed text.
+ */
+function congrea_file_rewrite_pluginfile_urls(
+$text, $file, $contextid, $component, $filearea, $itemid, $filename, array $options = null
+) {
+    global $CFG;
+    $options = (array) $options;
+    if (!isset($options['forcehttps'])) {
+        $options['forcehttps'] = false;
+    }
+
+    if (!$CFG->slasharguments) {
+        $file = $file . '?file=';
+    }
+
+    $baseurl = "$CFG->wwwroot/$file/$contextid/$component/$filearea/";
+
+    if ($itemid !== null) {
+        $baseurl .= "$itemid/$filename";
+    }
+
+    if ($options['forcehttps']) {
+        $baseurl = str_replace('http://', 'https://', $baseurl);
+    }
+    $replaceurl = "$CFG->wwwroot/$file/$contextid/$component/$filearea/$itemid/";
+    return str_replace('@@PLUGINFILE@@/', $replaceurl, $text);
+}
+
+/**
+ * function to formate text
+ * serving for virtual class
+ *
+ * @param int $cmid
+ * @param object $questiondata
+ * @param string $text
+ * @param string $formate
+ * @param string $component
+ * @param string $filearea helps identify the file area.
+ * @param int $itemid helps identify the file area.
+ * @return string
+ */
+function congrea_formate_text($cmid, $questiondata, $text, $formate, $component, $filearea, $itemid) {
+    global $PAGE, $DB;
+
+    $context = context_module::instance($cmid);
+    if (!empty($text)) {
+        if (!isset($formate)) {
+            $formate = FORMAT_HTML;
+        }
+        $pattern = '/src="@@PLUGINFILE@@\/(.*?)"/';
+        preg_match($pattern, $text, $matches);
+        if (!empty($matches)) {
+            $filename = $matches[1];
+            $f = 'mod/congrea/pluginfile.php';
+            $contents = congrea_file_rewrite_pluginfile_urls(
+                    $text, $f, $questiondata->contextid, $component, $filearea, $itemid, $filename
+            );
+            return congrea_make_html_inline($contents);
+        } else {
+            return congrea_make_html_inline($text);
+        }
+    } else {
+        return '';
+    }
+}
+
+/**
+ * function to convert text in inline
+ * serving for virtual class
+ *
+ * @param string $html
+ * @return string
+ */
+function congrea_make_html_inline($html) {
+    $html = preg_replace('~\s*<p>\s*~u', '', $html);
+    $html = preg_replace('~\s*</p>\s*~u', '<br />', $html);
+    $html = preg_replace('~(<br\s*/?>)+$~u', '', $html);
+    return trim($html);
 }

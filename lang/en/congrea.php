@@ -19,7 +19,7 @@
  * English strings for congrea
  *
  * @package    mod_congrea
- * @copyright  2020 vidyamantra.com
+ * @copyright  2021 vidyamantra.com
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 defined('MOODLE_INTERNAL') || die();
@@ -48,6 +48,8 @@ $string['congrea:view'] = 'View congrea';
 $string['congrea:pollreport'] = 'View poll report';
 $string['congrea:quizreport'] = 'View quiz report';
 $string['congrea:managesession'] = 'Manage session(s)';
+$string['congrea:managepoll'] = 'Manage poll';
+$string['congrea:managequiz'] = 'Manage quiz';
 $string['congrea:sessionpresent'] = 'Present session';
 $string['notcapabletocreateevent'] = 'You cannot create, edit or delete a session because you don\'t have the capability to create calendar event.';
 $string['notcapabletodeletereport'] = 'You cannot delete a report because you don\'t have the capability to manage session.';
@@ -369,3 +371,5 @@ $string['hours'] = ' hr ';
 $string['scheduleid'] = 'Schedule ID';
 $string['blankduration'] = 'Invalid input!';
 $string['totalconflicts'] = 'Total conflicts = ';
+$string['missingwstoken'] = 'Missing Web service token for Congrea';
+$string['Noserviceidforcongrea'] = 'Congrea web service does not exit';
