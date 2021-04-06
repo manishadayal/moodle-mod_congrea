@@ -681,7 +681,7 @@ function calctime($connect, $disconnect, $x, $y) {
                 $connect[$i] = $lastdis;
             }
             if (empty($disconnect[$i])) { // If disconnect pair is empty.
-                // TODO handle this case
+                // TODO handle this case.
                 $disconnect[$i] = $y; // Max value of session.
             }
             if ($disconnect[$i] < $connect[$i]) { // If connect larger than disconnect.
@@ -699,7 +699,7 @@ function calctime($connect, $disconnect, $x, $y) {
             }
 
             if (empty($connect[$i])) { // If connect pair is empty.
-                // TODO handle this case
+                // TODO handle this case.
                 unset($disconnect[$i - 1]); // Becoz of array sort.
             }
             if ($disconnect[$i] > $y) {
@@ -892,7 +892,8 @@ function congrea_get_records($congrea, $type) {
     get_string('teacher', 'congrea'),
     get_string('repeatstatus', 'congrea'));
     $timestart = time();
-    $sql = "SELECT * FROM {event} WHERE modulename = 'congrea' AND instance = $congrea->id AND timestart >= $timestart ORDER BY timestart ASC"; // TODO:.
+    $sql = "SELECT * FROM {event}
+    WHERE modulename = 'congrea' AND instance = $congrea->id AND timestart >= $timestart ORDER BY timestart ASC"; // TODO:.
     if (($type > 1)) {
         $rs = (object)$DB->get_recordset_sql($sql, null, 0, $type);
     } else {

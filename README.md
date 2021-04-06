@@ -39,7 +39,7 @@ support@vidyamantra.com
 
 ## 3.8+r1
 * Refactor communication code for Quiz and Poll
-* Security fixes. 
+* Security fixes.
 
 ## 3.5+r8
 * Joining issue for non-English locales

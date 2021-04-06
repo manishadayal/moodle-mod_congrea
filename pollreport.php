@@ -92,8 +92,7 @@ if (!empty($graphdata)) {
             <div id="piechart" style="width: 900px; height: 500px;"></div>
         </body>
     </html>
-
-<?php
+    <?php
 }
 if (!empty($questionid) && !empty($optiondata)) {
     $sql = "SELECT cpa.*, u.firstname, u.lastname, u.email
